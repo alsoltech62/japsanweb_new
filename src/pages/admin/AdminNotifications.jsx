@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { 
-  sendAdminNotification, 
-  getAdminNotifications, 
-  updateAdminNotification, 
+import {
+  sendAdminNotification,
+  getAdminNotifications,
+  updateAdminNotification,
   deleteAdminNotification,
   getScheduledNotifications,
   createScheduledNotifications,
@@ -14,17 +14,17 @@ import {
   resumeScheduledNotification,
   runDueScheduledNotifications
 } from '../../services/api';
-import { 
-  FiSend, 
-  FiList, 
-  FiEdit2, 
-  FiTrash2, 
-  FiSearch, 
-  FiRefreshCw, 
-  FiImage, 
-  FiUsers, 
-  FiClock, 
-  FiX, 
+import {
+  FiSend,
+  FiList,
+  FiEdit2,
+  FiTrash2,
+  FiSearch,
+  FiRefreshCw,
+  FiImage,
+  FiUsers,
+  FiClock,
+  FiX,
   FiCheck,
   FiCalendar,
   FiPlus,
@@ -61,11 +61,9 @@ export default function AdminNotifications() {
     image_url: ''
   });
 
-  // Initialize with 3 slots by default (user can easily add 10 or more)
+  // Initialize with 1 slot by default (user can easily add 5, 10 or more)
   const [scheduleSlots, setScheduleSlots] = useState([
-    createEmptySlot(0),
-    createEmptySlot(1),
-    createEmptySlot(2)
+    createEmptySlot(0)
   ]);
   const [schedulingLoading, setSchedulingLoading] = useState(false);
 
@@ -165,8 +163,45 @@ export default function AdminNotifications() {
     toast.success(`Distributed dates daily starting from tomorrow!`);
   };
 
+  const handleScheduleSingleSlot = async (index) => {
+    const slot = scheduleSlots[index];
+    if (!slot.title.trim() || !slot.message.trim() || !slot.scheduled_at) {
+      return toast.error(`Please fill in Title, Message, and Schedule Date/Time for Slot #${index + 1}.`);
+    }
+
+    setSchedulingLoading(true);
+    try {
+      const payload = {
+        notifications: [{
+          title: slot.title.trim(),
+          message: slot.message.trim(),
+          target: slot.target,
+          scheduled_at: slot.scheduled_at.replace('T', ' ') + (slot.scheduled_at.length === 16 ? ':00' : ''),
+          repeat_type: slot.repeat_type,
+          repeat_until: slot.repeat_until ? slot.repeat_until.replace('T', ' ') + (slot.repeat_until.length === 16 ? ':00' : '') : null,
+          image_url: slot.image_url?.trim() || null
+        }]
+      };
+
+      const res = await createScheduledNotifications(payload);
+      if (res.data?.success) {
+        toast.success(res.data.message || `Notification #${index + 1} scheduled successfully!`);
+        if (scheduleSlots.length > 1) {
+          setScheduleSlots(prev => prev.filter((_, idx) => idx !== index));
+        } else {
+          setScheduleSlots([createEmptySlot(0)]);
+        }
+        setActiveTab('queue');
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || 'Failed to schedule notification');
+    } finally {
+      setSchedulingLoading(false);
+    }
+  };
+
   const handleScheduleSubmit = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
 
     // Validate slots
     const validSlots = scheduleSlots.filter(s => s.title.trim() && s.message.trim() && s.scheduled_at);
@@ -183,16 +218,16 @@ export default function AdminNotifications() {
           target: s.target,
           scheduled_at: s.scheduled_at.replace('T', ' ') + (s.scheduled_at.length === 16 ? ':00' : ''),
           repeat_type: s.repeat_type,
-          repeat_until: s.repeat_until ? s.repeat_until.replace('T', ' ') + ':00' : null,
+          repeat_until: s.repeat_until ? s.repeat_until.replace('T', ' ') + (s.repeat_until.length === 16 ? ':00' : '') : null,
           image_url: s.image_url.trim() || null
         }))
       };
 
       const res = await createScheduledNotifications(payload);
       if (res.data?.success) {
-        toast.success(res.data.message || `Successfully scheduled ${validSlots.length} notifications!`);
-        // Reset to 3 fresh slots
-        setScheduleSlots([createEmptySlot(0), createEmptySlot(1), createEmptySlot(2)]);
+        toast.success(res.data.message || `Successfully scheduled ${validSlots.length} notification(s)!`);
+        // Reset to 1 fresh slot
+        setScheduleSlots([createEmptySlot(0)]);
         setActiveTab('queue');
       }
     } catch (err) {
@@ -484,44 +519,40 @@ export default function AdminNotifications() {
         <div className="flex items-center bg-slate-100 p-1.5 rounded-2xl border border-slate-200 shrink-0 overflow-x-auto">
           <button
             onClick={() => setActiveTab('schedule')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
-              activeTab === 'schedule'
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${activeTab === 'schedule'
                 ? 'bg-white text-orange-600 shadow-sm'
                 : 'text-slate-600 hover:text-slate-900'
-            }`}
+              }`}
           >
-            <FiCalendar size={14} /> ⏰ Auto Schedule ({scheduleSlots.length})
+            <FiCalendar size={14} /> ⏰ Auto Schedule
           </button>
 
           <button
             onClick={() => setActiveTab('queue')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
-              activeTab === 'queue'
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${activeTab === 'queue'
                 ? 'bg-white text-orange-600 shadow-sm'
                 : 'text-slate-600 hover:text-slate-900'
-            }`}
+              }`}
           >
             <FiList size={14} /> 📋 Scheduled Queue ({scheduledStats.pending})
           </button>
 
           <button
             onClick={() => setActiveTab('send')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
-              activeTab === 'send'
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${activeTab === 'send'
                 ? 'bg-white text-orange-600 shadow-sm'
                 : 'text-slate-600 hover:text-slate-900'
-            }`}
+              }`}
           >
             <FiSend size={14} /> 🚀 Instant Broadcast
           </button>
 
           <button
             onClick={() => setActiveTab('history')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
-              activeTab === 'history'
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${activeTab === 'history'
                 ? 'bg-white text-orange-600 shadow-sm'
                 : 'text-slate-600 hover:text-slate-900'
-            }`}
+              }`}
           >
             <FiClock size={14} /> 📜 History ({notifications.length})
           </button>
@@ -574,10 +605,10 @@ export default function AdminNotifications() {
           </div>
 
           {/* Schedule Form */}
-          <form onSubmit={handleScheduleSubmit} className="space-y-5">
+          <form onSubmit={handleScheduleSubmit} noValidate className="space-y-5">
             <div className="space-y-4">
               {scheduleSlots.map((slot, index) => (
-                <div 
+                <div
                   key={slot.id}
                   className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs hover:border-orange-300 transition-all space-y-4 relative"
                 >
@@ -592,10 +623,17 @@ export default function AdminNotifications() {
                       </h4>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <span className="text-[11px] text-slate-400 font-medium hidden sm:inline">
-                        Slot #{index + 1} of {scheduleSlots.length}
-                      </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleScheduleSingleSlot(index)}
+                        disabled={schedulingLoading}
+                        className="px-3 py-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold transition flex items-center gap-1 shadow-sm"
+                        title="Schedule this single notification"
+                      >
+                        <FiCalendar size={13} /> Schedule Slot #{index + 1}
+                      </button>
+
                       {scheduleSlots.length > 1 && (
                         <button
                           type="button"
@@ -640,7 +678,6 @@ export default function AdminNotifications() {
                           const val = e.target.value;
                           handleSlotChange(index, 'scheduled_at', val);
                         }}
-                        required
                       />
                     </div>
 
@@ -672,7 +709,6 @@ export default function AdminNotifications() {
                         placeholder={`e.g. 🎁 Special Offer Alert #${index + 1}: Claim 10% bonus coins today!`}
                         value={slot.title}
                         onChange={e => handleSlotChange(index, 'title', e.target.value)}
-                        required
                       />
                     </div>
 
@@ -686,7 +722,6 @@ export default function AdminNotifications() {
                         placeholder="Write the full announcement or deal message for this scheduled slot..."
                         value={slot.message}
                         onChange={e => handleSlotChange(index, 'message', e.target.value)}
-                        required
                       />
                     </div>
 
@@ -717,6 +752,21 @@ export default function AdminNotifications() {
                         />
                       </div>
                     )}
+                  </div>
+
+                  {/* Slot Footer Action */}
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                    <span className="text-xs text-slate-400">
+                      {slot.title.trim() && slot.message.trim() ? '✓ Ready to schedule' : 'Fill Title & Message to schedule this slot'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleScheduleSingleSlot(index)}
+                      disabled={schedulingLoading}
+                      className="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+                    >
+                      <FiCalendar size={14} /> Save Slot #{index + 1} to Queue
+                    </button>
                   </div>
                 </div>
               ))}
@@ -751,7 +801,7 @@ export default function AdminNotifications() {
               <div className="flex items-center gap-3 w-full sm:w-auto">
                 <div className="text-right hidden sm:block">
                   <span className="text-xs text-slate-500 font-medium block">
-                    Total Slots: <strong>{scheduleSlots.length}</strong>
+                    Filled Slots: <strong>{scheduleSlots.filter(s => s.title.trim() && s.message.trim()).length}</strong> / {scheduleSlots.length}
                   </span>
                   <span className="text-[10px] text-slate-400">Ready to save in queue</span>
                 </div>
@@ -769,7 +819,7 @@ export default function AdminNotifications() {
                   ) : (
                     <>
                       <FiCalendar size={16} />
-                      Save & Schedule All ({scheduleSlots.length}) Notifications
+                      Save & Schedule All ({scheduleSlots.filter(s => s.title.trim() && s.message.trim()).length || scheduleSlots.length}) Notifications
                     </>
                   )}
                 </button>
@@ -913,23 +963,21 @@ export default function AdminNotifications() {
                       <div className="space-y-1.5 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
                           {/* Status Badge */}
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
-                            item.status === 'pending'
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${item.status === 'pending'
                               ? isItemPast
                                 ? 'bg-amber-100 text-amber-900 border border-amber-300'
                                 : 'bg-blue-100 text-blue-800'
                               : item.status === 'sent'
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : 'bg-slate-100 text-slate-600'
-                          }`}>
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : 'bg-slate-100 text-slate-600'
+                            }`}>
                             {item.status === 'pending' ? (isItemPast ? '⚠️ Due / In Queue' : '🕒 Pending') : item.status === 'sent' ? '✅ Sent' : '❌ Cancelled'}
                           </span>
 
                           {/* Target Audience Badge */}
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
-                            item.target === 'all' ? 'bg-indigo-100 text-indigo-800' :
-                            item.target === 'users' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'
-                          }`}>
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${item.target === 'all' ? 'bg-indigo-100 text-indigo-800' :
+                              item.target === 'users' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'
+                            }`}>
                             {item.target === 'all' ? '🌐 All Users & Vendors' : item.target === 'users' ? '👤 Users' : '🏪 Vendors'}
                           </span>
 
@@ -1038,10 +1086,10 @@ export default function AdminNotifications() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Target Audience</label>
-              <select 
+              <select
                 className="input-field"
                 value={form.target}
-                onChange={e => setForm({...form, target: e.target.value})}
+                onChange={e => setForm({ ...form, target: e.target.value })}
               >
                 <option value="all">🌐 All Users & Vendors</option>
                 <option value="users">👤 Users (Customers) Only</option>
@@ -1051,23 +1099,23 @@ export default function AdminNotifications() {
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Notification Title *</label>
-              <input 
-                type="text" 
-                className="input-field" 
-                placeholder="e.g. 🔥 Weekend Special: Get 20% Extra Cashback!" 
+              <input
+                type="text"
+                className="input-field"
+                placeholder="e.g. 🔥 Weekend Special: Get 20% Extra Cashback!"
                 value={form.title}
-                onChange={e => setForm({...form, title: e.target.value})}
+                onChange={e => setForm({ ...form, title: e.target.value })}
                 required
               />
             </div>
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Message Body *</label>
-              <textarea 
-                className="input-field min-h-[120px]" 
-                placeholder="Write your announcement or offer details here..." 
+              <textarea
+                className="input-field min-h-[120px]"
+                placeholder="Write your announcement or offer details here..."
                 value={form.message}
-                onChange={e => setForm({...form, message: e.target.value})}
+                onChange={e => setForm({ ...form, message: e.target.value })}
                 required
               />
             </div>
@@ -1075,10 +1123,10 @@ export default function AdminNotifications() {
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Banner Image (Optional)</label>
               <p className="text-xs text-slate-400 mb-2">Recommended: 16:9 ratio. Supported: JPG, PNG, WEBP (Max 2MB)</p>
-              <input 
-                type="file" 
+              <input
+                type="file"
                 accept="image/*"
-                className="input-field text-xs" 
+                className="input-field text-xs"
                 onChange={handleImageChange}
               />
               {imagePreview && (
@@ -1095,8 +1143,8 @@ export default function AdminNotifications() {
               )}
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={loading}
               className="btn-primary w-full py-3.5 flex items-center justify-center gap-2 text-sm font-bold shadow-lg shadow-orange-500/20"
             >
@@ -1175,10 +1223,9 @@ export default function AdminNotifications() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
-                          item.target === 'all' ? 'bg-indigo-100 text-indigo-800' :
-                          item.target === 'users' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'
-                        }`}>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${item.target === 'all' ? 'bg-indigo-100 text-indigo-800' :
+                            item.target === 'users' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'
+                          }`}>
                           {item.target === 'all' ? '🌐 All Users & Vendors' : item.target === 'users' ? '👤 Users' : '🏪 Vendors'}
                         </span>
                         <span className="text-slate-400 text-xs flex items-center gap-1">
@@ -1410,7 +1457,7 @@ export default function AdminNotifications() {
                     <img src={editImagePreview} alt="Preview" className="max-h-32 rounded-xl border border-slate-200" />
                     <button
                       type="button"
-                      onClick={() => { setEditImageFile(null); setEditImagePreview(null); setEditForm({...editForm, image_url: ''}); }}
+                      onClick={() => { setEditImageFile(null); setEditImagePreview(null); setEditForm({ ...editForm, image_url: '' }); }}
                       className="absolute -top-2 -right-2 bg-rose-500 text-white p-1 rounded-full shadow hover:bg-rose-600"
                     >
                       <FiX size={12} />

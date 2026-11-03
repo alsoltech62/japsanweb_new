@@ -165,6 +165,7 @@ export const getActiveSpinReward = () => api.get('/spin/active_deposit_reward.ph
 export const getSpinHistory = (params) => api.get('/spin/history.php', { params });
 export const getAdminSpinData = (params) => api.get('/admin/spin_management.php', { params });
 export const saveAdminSpinReward = (data) => api.post('/admin/spin_management.php', data);
+export const resetAdminSpinRewards = () => api.post('/admin/spin_management.php', { action: 'reset_official_rewards' });
 export const deleteAdminSpinReward = (id) => api.delete(`/admin/spin_management.php?id=${id}`);
 
 export default api;

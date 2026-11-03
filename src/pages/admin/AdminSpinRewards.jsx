@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { getAdminSpinData, saveAdminSpinReward, deleteAdminSpinReward } from '../../services/api';
+import { getAdminSpinData, saveAdminSpinReward, deleteAdminSpinReward, resetAdminSpinRewards } from '../../services/api';
 import { 
   FiSettings, FiGift, FiPlus, FiEdit2, FiTrash2, FiSave, 
   FiRefreshCw, FiZap, FiCheckCircle, FiClock, FiAlertTriangle 
@@ -136,6 +136,21 @@ export default function AdminSpinRewards() {
       }
     } catch (err) {
       toast.error('Failed to toggle status');
+    }
+  };
+
+  const handleResetOfficialRewards = async () => {
+    if (!window.confirm("Are you sure you want to reset all 8 rewards to the official table (30%, 20%, 15%, 15%, 10%, 5%, 4%, 1%)?")) {
+      return;
+    }
+    try {
+      const res = await resetAdminSpinRewards();
+      if (res.data?.success) {
+        toast.success(res.data.message || '8 rewards synced to official probabilities!');
+        loadData();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to reset rewards');
     }
   };
 
@@ -307,12 +322,21 @@ export default function AdminSpinRewards() {
             </div>
           </div>
 
-          <button
-            onClick={() => handleOpenRewardModal(null)}
-            className="btn-primary flex items-center gap-2 self-start sm:self-auto text-sm"
-          >
-            <FiPlus /> Add New Segment
-          </button>
+          <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+            <button
+              onClick={handleResetOfficialRewards}
+              className="px-3.5 py-2 rounded-xl bg-amber-50 border border-amber-300 text-amber-800 hover:bg-amber-100 text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+              title="Reset all rewards to official 100% probability structure"
+            >
+              <FiRefreshCw size={14} /> Reset Official 8 Rewards (100%)
+            </button>
+            <button
+              onClick={() => handleOpenRewardModal(null)}
+              className="btn-primary flex items-center gap-2 text-sm"
+            >
+              <FiPlus /> Add New Segment
+            </button>
+          </div>
         </div>
 
         {/* REWARDS TABLE */}

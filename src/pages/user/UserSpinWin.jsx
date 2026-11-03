@@ -405,6 +405,10 @@ export default function UserSpinWin() {
                     </td>
                   </tr>
                 ))}
+                <tr className="bg-white/5 font-black text-amber-300">
+                  <td className="py-2.5 px-2.5" colSpan={3}>Total</td>
+                  <td className="py-2.5 px-2.5 text-right font-black">100%</td>
+                </tr>
               </tbody>
             </table>
           </div>
