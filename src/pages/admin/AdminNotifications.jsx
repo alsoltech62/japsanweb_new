@@ -12,7 +12,10 @@ import {
   sendNowScheduledNotification,
   cancelScheduledNotification,
   resumeScheduledNotification,
-  runDueScheduledNotifications
+  runDueScheduledNotifications,
+  resendAdminNotification,
+  getStoreReminderStats,
+  triggerStoreReminders
 } from '../../services/api';
 import {
   FiSend,
@@ -109,6 +112,24 @@ export default function AdminNotifications() {
   const [editImagePreview, setEditImagePreview] = useState(null);
   const [savingEdit, setSavingEdit] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [resendingId, setResendingId] = useState(null);
+
+  // Store update reminder stats (Requirement 17 & 18)
+  const [storeStats, setStoreStats] = useState(null);
+  const [triggeringReminders, setTriggeringReminders] = useState(false);
+
+  const fetchStoreStats = async () => {
+    try {
+      const res = await getStoreReminderStats();
+      if (res.data?.success) {
+        setStoreStats(res.data.data);
+      }
+    } catch (_) {}
+  };
+
+  useEffect(() => {
+    fetchStoreStats();
+  }, []);
 
   // Fetch when tab changes
   useEffect(() => {
@@ -496,6 +517,40 @@ export default function AdminNotifications() {
     }
   };
 
+  // Resend notification (Requirement 18)
+  const handleResendNotification = async (item) => {
+    if (!window.confirm(`Resend notification "${item.title}" to ${item.target === 'all' ? 'all users & vendors' : item.target}?`)) return;
+
+    setResendingId(item.id);
+    try {
+      const res = await resendAdminNotification(item.id, item.target);
+      if (res.data?.success) {
+        toast.success(res.data.message || 'Notification resent successfully!');
+        fetchNotifications();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to resend notification');
+    } finally {
+      setResendingId(null);
+    }
+  };
+
+  // Trigger daily store update reminders (Requirement 17 & 18)
+  const handleTriggerStoreReminders = async (force = false) => {
+    setTriggeringReminders(true);
+    try {
+      const res = await triggerStoreReminders(force);
+      if (res.data?.success) {
+        toast.success(res.data.message || 'Store update reminders processed!');
+        fetchStoreStats();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to send store reminders');
+    } finally {
+      setTriggeringReminders(false);
+    }
+  };
+
   const filteredHistory = notifications.filter(n => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
@@ -555,6 +610,46 @@ export default function AdminNotifications() {
               }`}
           >
             <FiClock size={14} /> 📜 History ({notifications.length})
+          </button>
+        </div>
+      </div>
+
+      {/* Requirement 17 & 18: Daily Store Update Reminder Banner */}
+      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-5 text-white border border-indigo-800/40 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider">
+              🏪 Store Update Daily Reminder (Req 17 & 18)
+            </span>
+            <span className="text-emerald-400 text-xs font-semibold flex items-center gap-1">
+              <FiCheck size={12} /> Auto-Daily Active
+            </span>
+          </div>
+          <h3 className="text-base font-black text-white">Jab tak Store Update na kare, tab tak Roz Notification</h3>
+          <p className="text-xs text-slate-300 max-w-xl">
+            Un sabhi stores/vendors ko roz automatic notification bheja jata hai jinhone apna profile / KYC update nahi kiya hai. Jaise hi store update ho jayega, notification automatically band ho jayega.
+          </p>
+          {storeStats && (
+            <div className="flex items-center gap-3 pt-1 text-xs text-slate-300 flex-wrap">
+              <span>Pending Stores: <strong className="text-amber-400">{storeStats.pending_update_stores}</strong></span>
+              <span>•</span>
+              <span>Updated Stores: <strong className="text-emerald-400">{storeStats.updated_stores}</strong></span>
+              <span>•</span>
+              <span>Reminders Sent Today: <strong className="text-indigo-300">{storeStats.reminders_sent_today}</strong></span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            disabled={triggeringReminders}
+            onClick={() => handleTriggerStoreReminders(true)}
+            className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-xs font-black shadow transition-all flex items-center gap-1.5 disabled:opacity-50"
+            title="Send or resend daily reminder to all pending stores now"
+          >
+            <FiZap size={14} className={triggeringReminders ? 'animate-spin' : ''} />
+            {triggeringReminders ? 'Sending Reminders...' : '⚡ Send Reminders Now'}
           </button>
         </div>
       </div>
@@ -1010,6 +1105,16 @@ export default function AdminNotifications() {
                           </button>
                         )}
 
+                        {item.status === 'sent' && (
+                          <button
+                            onClick={() => handleSendNowScheduled(item)}
+                            className="px-3 py-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs transition flex items-center gap-1"
+                            title="Resend this scheduled notification"
+                          >
+                            <FiRepeat size={12} /> Resend
+                          </button>
+                        )}
+
                         {item.status === 'pending' ? (
                           <button
                             onClick={() => handleCancelScheduled(item)}
@@ -1237,6 +1342,15 @@ export default function AdminNotifications() {
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        onClick={() => handleResendNotification(item)}
+                        disabled={resendingId === item.id}
+                        className="px-3 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs transition-all flex items-center gap-1.5 disabled:opacity-50"
+                        title="Resend this broadcast notification"
+                      >
+                        <FiRepeat size={13} className={resendingId === item.id ? 'animate-spin' : ''} />
+                        {resendingId === item.id ? 'Resending...' : 'Resend'}
+                      </button>
                       <button
                         onClick={() => openEditModal(item)}
                         className="p-2 text-slate-600 hover:text-blue-600 bg-slate-50 hover:bg-blue-50 border border-slate-200 rounded-xl transition-all"

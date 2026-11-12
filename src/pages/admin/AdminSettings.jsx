@@ -30,11 +30,11 @@ const GROUPS = {
   'Coin Economy': ['coin_purchase_price_inr', 'min_recharge_amount', 'recharge_bonus_percent', 'redemption_rate_min','redemption_rate_max','redemption_rate_current'],
   'Limits & Caps': ['min_recharge_amount', 'min_payment_amount', 'min_withdrawal_amount', 'default_search_radius_km', 'daily_redemption_cap','vendor_distribution_limit'],
   'Bonus & Cashback': ['recharge_bonus_percent', 'bonus_threshold','bonus_coins','cashback_percent','max_cashback_percent'],
-  'WhatsApp Integration': ['feature_whatsapp', 'whatsapp_api_url', 'whatsapp_user', 'whatsapp_pass', 'whatsapp_sender', 'whatsapp_vendor_welcome_template', 'whatsapp_user_welcome_template'],
+  'WhatsApp Integration': ['whatsapp_channel_link', 'whatsapp_channel_title', 'feature_whatsapp', 'whatsapp_api_url', 'whatsapp_user', 'whatsapp_pass', 'whatsapp_sender', 'whatsapp_vendor_welcome_template', 'whatsapp_user_welcome_template'],
   'Vendor Advertising': ['vendor_ad_fee_per_day'],
   'Physical QR Orders': ['qr_order_coin_price', 'feature_physical_qr_order', 'qr_order_package_items'],
   'Fees & Settlement': ['vendor_withdrawal_fee_percent','settlement_delay_days'],
-  'Referral System': ['max_referral_levels','referral_coins_user_user','referral_coins_vendor_user','referral_coins_vendor_vendor','referral_lock_days','referral_unlock_on_transaction'],
+  'Referral System': ['min_network_maintain_balance', 'network_lock_popup_title', 'network_lock_popup_message', 'max_referral_levels','referral_coins_user_user','referral_coins_vendor_user','referral_coins_vendor_vendor','referral_lock_days','referral_unlock_on_transaction'],
   'Feature Toggles': ['feature_referral','feature_qr_payment','feature_physical_qr_order','feature_whatsapp','feature_notifications','feature_coin_purchase'],
   'Platform Info': ['platform_name','support_phone','support_email','otp_expiry_minutes','max_otp_attempts'],
 };
@@ -51,6 +51,11 @@ const DEFAULT_METADATA = {
   daily_reward_day_7: { type: 'number', description: 'Day 7 Grand Reward Coins (JC)', raw: '7' },
   daily_reward_title: { type: 'string', description: 'Popup Title displayed to users in App & Web', raw: 'Roj Open Karo, Roj Rewards Paao!' },
   daily_reward_subtitle: { type: 'string', description: 'Popup Subtitle/Instruction text', raw: '7 din lagatar open karein aur week complete hone par paayein rewards!' },
+  whatsapp_channel_link: { type: 'string', description: 'WhatsApp Channel / Group Link (App & Web me user join kar sakein)', raw: 'https://whatsapp.com/channel/' },
+  whatsapp_channel_title: { type: 'string', description: 'WhatsApp Channel display title', raw: 'Join Official WhatsApp Channel' },
+  min_network_maintain_balance: { type: 'number', description: 'Minimum Wallet Balance (Coins) required to unlock Network Tab & receive Network Income/Rewards', raw: '1000' },
+  network_lock_popup_title: { type: 'string', description: 'Popup title when network is locked', raw: 'Unlock Network Income' },
+  network_lock_popup_message: { type: 'string', description: 'Notification message when wallet balance < 1000 coins', raw: 'Unlock network income by maintaining 1000 coin in your wallet' },
 };
 
 export default function AdminSettings() {

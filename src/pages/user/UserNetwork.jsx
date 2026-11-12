@@ -61,41 +61,89 @@ export default function UserNetwork() {
     );
   }
 
+  // 1000 Coins Maintenance Lock Screen (Requirement B)
+  if (networkData.is_network_locked) {
+    return (
+      <div className="min-h-screen bg-slate-900/10 p-6 flex items-center justify-center">
+        <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-slate-200 shadow-2xl text-center space-y-6">
+          <div className="w-20 h-20 mx-auto rounded-3xl bg-amber-50 text-amber-600 flex items-center justify-center text-3xl shadow-sm border border-amber-200">
+            🔒
+          </div>
+          <div>
+            <span className="text-[11px] font-black tracking-wider uppercase px-3 py-1 bg-amber-100 text-amber-800 rounded-full">
+              {networkData.lock_popup_title || 'Unlock Network Income'}
+            </span>
+            <h2 className="text-xl font-black text-slate-800 mt-3">
+              Network Locked
+            </h2>
+            <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+              {networkData.lock_popup_message || 'Unlock network income by maintaining 1000 coin in your wallet'}
+            </p>
+          </div>
+
+          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
+            <div className="flex justify-between text-xs font-semibold">
+              <span className="text-slate-500">Your Coin Balance:</span>
+              <span className="text-slate-800 font-bold">{networkData.user_current_balance || 0} JC</span>
+            </div>
+            <div className="flex justify-between text-xs font-semibold">
+              <span className="text-slate-500">Required Minimum:</span>
+              <span className="text-amber-600 font-black">{networkData.min_maintain_balance || 1000} JC</span>
+            </div>
+            <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden mt-2">
+              <div 
+                className="bg-amber-500 h-full rounded-full transition-all"
+                style={{ width: `${Math.min(100, ((networkData.user_current_balance || 0) / (networkData.min_maintain_balance || 1000)) * 100)}%` }}
+              />
+            </div>
+          </div>
+
+          <a
+            href="/user/buy-coins"
+            className="btn-primary w-full py-3.5 block font-bold text-center text-sm shadow-lg shadow-orange-500/20"
+          >
+            🪙 Buy Coins to Unlock Network
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-navy-50 pb-10">
+    <div className="min-h-screen bg-[#F0F4FA] pb-10">
       {/* Top Banner - Navy Blue */}
-      <div className="bg-navy-900 rounded-b-[40px] pt-8 pb-20 px-4 md:px-8 shadow-xl relative overflow-hidden">
+      <div className="bg-[#09152F] rounded-b-[40px] pt-8 pb-20 px-4 md:px-8 shadow-xl relative overflow-hidden text-white">
         {/* Subtle Gold Background Accents */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gold-400/10 blur-[100px] rounded-full"></div>
-        <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-gold-500/10 blur-[80px] rounded-full"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#D4AF37]/10 blur-[100px] rounded-full"></div>
+        <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-[#C89B3C]/10 blur-[80px] rounded-full"></div>
 
         <div className="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-gold-400 to-gold-900 p-1">
-              <div className="w-full h-full bg-navy-900 rounded-full flex items-center justify-center border-2 border-transparent">
-                <FaTrophy className="text-gold-400 text-2xl" />
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#E7C46A] to-[#C89B3C] p-1">
+              <div className="w-full h-full bg-[#09152F] rounded-full flex items-center justify-center border-2 border-transparent">
+                <FaTrophy className="text-[#E7C46A] text-2xl" />
               </div>
             </div>
             <div>
-              <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight">
+              <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight drop-shadow-sm">
                 My Network
               </h1>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-gold-400 text-sm font-bold uppercase tracking-widest px-2 py-1 bg-gold-400/10 rounded">
+                <span className="text-[#E7C46A] text-sm font-bold uppercase tracking-widest px-2.5 py-1 bg-[#D4AF37]/20 rounded-lg border border-[#D4AF37]/30">
                   Rank: {networkData.rank}
                 </span>
-                <span className="text-navy-200 text-sm">| Next: {networkData.next_rank || 'Bronze'}</span>
+                <span className="text-slate-300 text-sm font-medium">| Next: {networkData.next_rank || 'Bronze'}</span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 bg-navy-800/80 p-2 pr-2 pl-6 rounded-2xl border border-white/10 backdrop-blur-sm">
+          <div className="flex items-center gap-3 bg-[#0F2247]/90 p-2 pr-2 pl-6 rounded-2xl border border-white/20 backdrop-blur-sm shadow-lg">
             <span className="text-xl font-black text-white tracking-[0.2em]">{networkData.referralCode}</span>
             <div className="flex gap-2">
-              <button onClick={copyCode} className="p-3 bg-navy-700 hover:bg-navy-600 rounded-xl text-white transition-all">
+              <button onClick={copyCode} className="p-3 bg-[#1D376B] hover:bg-[#2F5EB1] rounded-xl text-white transition-all">
                 <FiCopy size={18} />
               </button>
-              <button className="p-3 bg-gradient-to-r from-gold-400 to-gold-500 hover:from-gold-500 hover:to-gold-600 rounded-xl text-navy-900 transition-all shadow-[0_0_15px_rgba(212,175,55,0.4)]">
+              <button className="p-3 bg-gradient-to-r from-[#E7C46A] to-[#C89B3C] hover:brightness-110 rounded-xl text-[#09152F] font-bold transition-all shadow-[0_0_15px_rgba(212,175,55,0.4)]">
                 <FiShare2 size={18} />
               </button>
             </div>
@@ -111,38 +159,38 @@ export default function UserNetwork() {
           {/* Left/Main Col: Tree View */}
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 min-h-[500px]">
-              <h3 className="text-lg font-bold text-navy-900 mb-8 flex items-center gap-2">
-                <FaUsers className="text-gold-500" /> Network Tree
+              <h3 className="text-lg font-bold text-[#09152F] mb-8 flex items-center gap-2">
+                <FaUsers className="text-[#C89B3C]" /> Network Tree
               </h3>
               
               {/* Tree Root (Me) */}
               <div className="flex flex-col items-center">
-                <div className="bg-navy-900 text-white px-8 py-3 rounded-2xl shadow-lg border border-gold-400/30 flex flex-col items-center">
-                   <div className="w-12 h-12 bg-gold-400 rounded-full flex items-center justify-center text-navy-900 font-black text-xl mb-2 -mt-8 shadow-md border-4 border-white">
+                <div className="bg-[#09152F] text-white px-8 py-3 rounded-2xl shadow-xl border border-[#D4AF37]/40 flex flex-col items-center">
+                   <div className="w-12 h-12 bg-gradient-to-br from-[#E7C46A] to-[#C89B3C] rounded-full flex items-center justify-center text-[#09152F] font-black text-xl mb-2 -mt-8 shadow-md border-4 border-white">
                       ME
                    </div>
-                   <p className="font-bold">Personal Level</p>
-                   <p className="text-xs text-gold-400">Biz: JC {Number(networkData.personalBusiness).toFixed(2)}</p>
+                   <p className="font-bold text-white">Personal Level</p>
+                   <p className="text-xs text-[#E7C46A] font-semibold">Biz: JC {Number(networkData.personalBusiness).toFixed(2)}</p>
                 </div>
                 
                 {/* Connector */}
                 <div className="w-px h-8 bg-slate-300"></div>
                 
                 {/* Level 1 Box */}
-                <div className="bg-navy-50 px-8 py-4 rounded-2xl border border-navy-100 shadow-sm w-full max-w-md text-center relative">
-                   <span className="absolute -left-3 -top-3 bg-gold-400 text-navy-900 text-[10px] font-black px-2 py-1 rounded shadow uppercase">Level 1</span>
-                   <p className="font-bold text-navy-900 mb-2">Direct Team ({networkData.totalReferrals} members)</p>
-                   <p className="text-sm font-medium text-slate-600">Level 1 Business: <span className="text-navy-900 font-bold">JC {Number(networkData.level1Business).toFixed(2)}</span></p>
+                <div className="bg-[#F0F4FA] px-8 py-4 rounded-2xl border border-[#B3C6E3] shadow-sm w-full max-w-md text-center relative">
+                   <span className="absolute -left-3 -top-3 bg-gradient-to-r from-[#E7C46A] to-[#C89B3C] text-[#09152F] text-[10px] font-black px-2.5 py-1 rounded-md shadow uppercase">Level 1</span>
+                   <p className="font-bold text-[#09152F] mb-2">Direct Team ({networkData.totalReferrals} members)</p>
+                   <p className="text-sm font-medium text-slate-600">Level 1 Business: <span className="text-[#09152F] font-bold">JC {Number(networkData.level1Business).toFixed(2)}</span></p>
                    
                    {/* Mini Avatars */}
                    <div className="flex justify-center gap-2 mt-4">
                      {networkData.directReferrals?.slice(0, 5).map((ref, i) => (
-                        <div key={i} className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-xs font-bold text-navy-900 shadow-sm" title={ref.name}>
+                        <div key={i} className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-xs font-bold text-[#09152F] shadow-sm" title={ref.name}>
                           {ref.name?.[0] || 'U'}
                         </div>
                      ))}
                      {(networkData.directReferrals?.length || 0) > 5 && (
-                        <div className="w-8 h-8 rounded-full bg-gold-100 border border-gold-200 flex items-center justify-center text-xs font-bold text-gold-700 shadow-sm">
+                        <div className="w-8 h-8 rounded-full bg-[#F9F2E3] border border-[#E7C46A] flex items-center justify-center text-xs font-bold text-[#A97823] shadow-sm">
                           +
                         </div>
                      )}

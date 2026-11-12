@@ -93,6 +93,9 @@ export const updateAdminNotification = (formData) => api.post('/admin/send_notif
 export const deleteAdminNotification = (id) => api.delete(`/admin/send_notification.php?id=${id}`, {
   data: { id }
 });
+export const resendAdminNotification = (id, target = 'all') => api.post('/admin/send_notification.php', { action: 'resend', id, target });
+export const getStoreReminderStats = () => api.post('/admin/send_notification.php', { action: 'store_reminder_stats' });
+export const triggerStoreReminders = (force = false) => api.post('/admin/send_notification.php', { action: 'send_store_reminders', force });
 
 // ── SCHEDULED NOTIFICATIONS ───────────────────────────────────
 export const getScheduledNotifications = (params) => api.get('/admin/scheduled_notifications.php', { params });
